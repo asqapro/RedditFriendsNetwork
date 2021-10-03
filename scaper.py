@@ -11,6 +11,8 @@ import networkx as nx
 class scraper:
     def __init__(self):
         self.replies_graph = nx.MultiDiGraph()
+        self.scraped_submissions = {}
+        self.scraped_redditors = {}
 
     def add_reply(self, reply_author, parent_author):
         #Track how many times each user responds to the same user
@@ -27,7 +29,10 @@ class scraper:
             self.add_reply(reply.author.name, parent_comment.author.name)
             self.parse_replies(reply)
 
-    def parse_thread(self, submission):
+    def parse_submission(self, submission):
+        if submission.id in self.scraped_submissions:
+            return
+        self.scraped_submissions[submission.id] = 1
         #Grab all the comments in the thread
         while True:
             try:
@@ -44,9 +49,19 @@ class scraper:
                 continue
             self.parse_replies(top_level_comment)
 
+    def parse_redditor(self, redditor):
+        if redditor.name in self.scraped_redditors:
+            return
+        self.scraped_redditors[redditor.name] = 1
+        for comment in redditor.comments.new(limit=100):
+            self.parse_submission(comment.submission)
+
 reddit = praw.Reddit("FriendsNetwork")
-#for submission in reddit.subreddit("all").top(time_filter="day", limit=1):
-submission = reddit.submission("pzrr9w")
-print("Parsing thread...")
+example_submission = reddit.submission("pzrr9w")
+example_user = reddit.redditor('asqapro')
 thread_scraper = scraper()
-thread_scraper.parse_thread(submission)
+#thread_scraper.parse_submission(submission)
+thread_scraper.parse_redditor(example_user)
+print("Finished generating graph. Displaying nodes then edges")
+for u,v,w in thread_scraper.replies_graph.edges(data=True):
+    print(F"Parent author: {v}| Reply author: {u} | Weight: {w}")
