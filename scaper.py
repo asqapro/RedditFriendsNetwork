@@ -26,13 +26,14 @@ class scraper:
         for reply in parent_comment.replies:
             if reply.author is None:
                 continue
+            if reply.author.name not in self.scraped_redditors:
+                self.scraped_redditors[reply.author.name] = False
             self.add_reply(reply.author.name, parent_comment.author.name)
             self.parse_replies(reply)
 
     def parse_submission(self, submission):
-        if submission.id in self.scraped_submissions:
+        if self.scraped_submissions[submission.id] is True:
             return
-        self.scraped_submissions[submission.id] = 1
         #Grab all the comments in the thread
         while True:
             try:
@@ -47,14 +48,20 @@ class scraper:
             #There may be nested comments replying to each other, but it's still a waste of processing power
             if top_level_comment.author is None:
                 continue
+            if top_level_comment.author.name not in self.scraped_redditors:
+                self.scraped_redditors[top_level_comment.author.name] = False
             self.parse_replies(top_level_comment)
+        self.scraped_submissions[submission.id] = True
 
     def parse_redditor(self, redditor):
-        if redditor.name in self.scraped_redditors:
+        if self.scraped_redditors[redditor.name] is True:
             return
-        self.scraped_redditors[redditor.name] = 1
-        for comment in redditor.comments.new(limit=100):
+        for comment in redditor.comments.new(limit=5):
+            if comment.submission.id not in self.scraped_submissions:
+                self.scraped_submissions[comment.submission.id] = False
             self.parse_submission(comment.submission)
+        self.scraped_redditors[redditor.name] = True
+        
 
 reddit = praw.Reddit("FriendsNetwork")
 example_submission = reddit.submission("pzrr9w")
