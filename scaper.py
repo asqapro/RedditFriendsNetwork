@@ -1,9 +1,3 @@
-# Outline:
-# - Find users in reddit comment thread
-# - Go through their comment history
-# - Find users they consistently reply to or are replied to by
-# - Analyze data
-
 import praw
 from time import sleep
 import networkx as nx
@@ -24,6 +18,8 @@ class scraper:
 
     def parse_replies(self, parent_comment):
         for reply in parent_comment.replies:
+            #Deleted comments will have no author, so there's no point in parsing replies to it
+            #There may be nested comments replying to each other, but it's still a waste of processing power
             if reply.author is None:
                 continue
             if reply.author.name not in self.scraped_redditors:
@@ -44,8 +40,6 @@ class scraper:
                 sleep(1)
         
         for top_level_comment in submission.comments:
-            #Deleted comments will have no author, so there's no point in parsing replies to it
-            #There may be nested comments replying to each other, but it's still a waste of processing power
             if top_level_comment.author is None:
                 continue
             if top_level_comment.author.name not in self.scraped_redditors:
@@ -61,14 +55,27 @@ class scraper:
                 self.scraped_submissions[comment.submission.id] = False
             self.parse_submission(comment.submission)
         self.scraped_redditors[redditor.name] = True
+
+    def display_network(self):
+        for u,v,w in thread_scraper.replies_graph.edges(data=True):
+            print(F"Parent author (P): {v}| Reply author (R): {u} | Weight (# of times R has replied to P overall): {w['weight']}")
         
 
-reddit = praw.Reddit("FriendsNetwork")
-example_submission = reddit.submission("pzrr9w")
-example_user = reddit.redditor('asqapro')
-thread_scraper = scraper()
-#thread_scraper.parse_submission(submission)
-thread_scraper.parse_redditor(example_user)
-print("Finished generating graph. Displaying nodes then edges")
-for u,v,w in thread_scraper.replies_graph.edges(data=True):
-    print(F"Parent author: {v}| Reply author: {u} | Weight: {w}")
+def example_run():
+    reddit = praw.Reddit("FriendsNetwork")
+    thread_scraper = scraper()
+
+    example_submission = reddit.submission("pzrr9w")
+    example_user = reddit.redditor('asqapro')
+
+    thread_scraper.parse_submission(example_submission)
+    thread_scraper.parse_redditor(example_user)
+
+if __name__ == '__main__':
+    reddit = praw.Reddit("FriendsNetwork")
+    thread_scraper = scraper()
+    while True:
+        for submission in reddit.subreddit("all").top("hour"):
+            thread_scraper.parse_submission(submission)
+
+    
