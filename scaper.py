@@ -1,5 +1,5 @@
 import praw
-from time import sleep
+from time import sleep, time
 import networkx as nx
 
 class scraper:
@@ -74,8 +74,15 @@ def example_run():
 if __name__ == '__main__':
     reddit = praw.Reddit("FriendsNetwork")
     thread_scraper = scraper()
+    #Only grab new posts every 3600 seconds (1 hour)
+    refresh_wait = 3600
     while True:
-        for submission in reddit.subreddit("all").top("hour"):
+        refresh_timer_start = time()
+        for submission in reddit.subreddit("all").top("hour", limit=100):
             thread_scraper.parse_submission(submission)
+        refresh_timer_end = time()
+        refresh_duration = refresh_timer_end - refresh_timer_start
+        if refresh_duration < refresh_wait:
+            sleep(refresh_wait - refresh_duration)
 
     
