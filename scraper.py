@@ -11,6 +11,7 @@
 import praw
 from time import sleep, time
 import networkx as nx
+from types import SimpleNamespace
 
 class reddit_scraper:
     def __init__(self):
@@ -21,10 +22,19 @@ class reddit_scraper:
         #Maybe add a lockout timeout in the future since users are likely to post more comments eventually
         self.scraped_redditors = {}
 
-    def scrape_new_submissions(self):
-        for submission in reddit.subreddit("all").top("hour", limit=100):
-            if submission is not None:
-                scraper.scraped_submissions[submission.id] = submission
+    def scrape_new_submissions(self, count):
+        for submission in reddit.subreddit("all").top("hour", limit=count):
+            self.add_scraped_submission(submission)
+
+    def add_scraped_submission(self, submission):
+        if submission is None:
+            return
+        self.scraped_submissions[submission.id] = {"submission": submission, "parsed": False}
+
+    def add_scraped_redditor(self, redditor):
+        if redditor is None:
+            return
+        self.scraped_redditors[redditor.name] = {"redditor": redditor, "parsed": False}
 
     def add_reply(self, reply_author, parent_author):
         #Track how many times each user responds to the same user
@@ -34,15 +44,14 @@ class reddit_scraper:
             edge_weight = self.replies_graph.get_edge_data(reply_author, parent_author, key=0)['weight'] + 1
         self.replies_graph.add_edge(reply_author, parent_author, key=0, weight=edge_weight)
 
-    def parse_replies(self, parent_comment):
-        for reply in parent_comment.replies:
-            #Deleted comments will have no author, so there's no point in parsing replies to it
-            #There may be nested comments replying to each other, but it's still a waste of processing power
+    def parse_replies(self, comment):
+        for reply in comment.replies:
+            #Skip deleted comments
             if reply.author is None:
                 continue
             if reply.author.name not in self.scraped_redditors:
-                self.scraped_redditors[reply.author.name] = reply.author
-            self.add_reply(reply.author.name, parent_comment.author.name)
+                self.add_scraped_redditor(reply.author)
+            self.add_reply(reply.author.name, comment.author.name)
             self.parse_replies(reply)
 
     def parse_submission(self, submission):
@@ -55,33 +64,34 @@ class reddit_scraper:
                 print("Handling replace_more exception")
                 sleep(1)
         
-        for top_level_comment in submission.comments:
-            if top_level_comment.author is None:
+        for comment in submission.comments:
+            #Skip deleted comments
+            if comment.author is None:
                 continue
-            if top_level_comment.author.name not in self.scraped_redditors:
-                self.scraped_redditors[top_level_comment.author.name] = top_level_comment.author
-            self.parse_replies(top_level_comment)
-        self.scraped_submissions[submission.id] = None
+            if comment.author.name not in self.scraped_redditors:
+                self.add_scraped_redditor(comment.author)
+            self.parse_replies(comment)
+        self.scraped_submissions[submission.id]["parsed"] = True
 
     def parse_redditor(self, redditor):
         for comment in redditor.comments.new(limit=100):
             if comment.submission.id not in self.scraped_submissions:
-                self.scraped_submissions[comment.submission.id] = comment.submission
-        self.scraped_redditors[redditor.name] = None
+                self.add_scraped_submission(comment.submission)
+        self.scraped_redditors[redditor.name]["parsed"] = True
 
     def parse_scraped_submissions(self):
         for submission in self.scraped_submissions.values():
             #Skip parsed submissions
-            if submission is None:
+            if submission["parsed"]:
                 continue
-            self.parse_submission(submission)
+            self.parse_submission(submission["submission"])
 
     def parse_scraped_redditors(self):
         for redditor in self.scraped_redditors.values():
             #Skip parsed redditors
-            if redditor is None:
+            if redditor["parsed"]:
                 continue
-            self.parse_redditor(redditor)
+            self.parse_redditor(redditor["redditor"])
 
     def display_network(self):
         for u,v,w in self.replies_graph.edges(data=True):
@@ -105,7 +115,7 @@ if __name__ == '__main__':
     refresh_wait = 3600
     while True:
         refresh_timer_start = time()
-        scraper.scrape_new_submissions()
+        scraper.scrape_new_submissions(10)
         scraper.parse_scraped_submissions()
         scraper.parse_scraped_redditors()
         refresh_timer_end = time()
