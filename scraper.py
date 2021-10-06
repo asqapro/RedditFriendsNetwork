@@ -11,7 +11,6 @@
 import praw
 from time import sleep, time
 import networkx as nx
-from types import SimpleNamespace
 
 class reddit_scraper:
     def __init__(self):
@@ -27,12 +26,20 @@ class reddit_scraper:
             self.add_scraped_submission(submission)
 
     def add_scraped_submission(self, submission):
+        #Skip deleted submissions
         if submission is None:
+            return
+        #Skip parsed submissions
+        if submission.id in self.scraped_submissions:
             return
         self.scraped_submissions[submission.id] = {"submission": submission, "parsed": False}
 
     def add_scraped_redditor(self, redditor):
+        #Skip deleted redditors
         if redditor is None:
+            return
+        #Skip parsed redditors  
+        if redditor.name in self.scraped_redditors:
             return
         self.scraped_redditors[redditor.name] = {"redditor": redditor, "parsed": False}
 
@@ -46,11 +53,10 @@ class reddit_scraper:
 
     def parse_replies(self, comment):
         for reply in comment.replies:
-            #Skip deleted comments
+            #Skip deleted replies
             if reply.author is None:
                 continue
-            if reply.author.name not in self.scraped_redditors:
-                self.add_scraped_redditor(reply.author)
+            self.add_scraped_redditor(reply.author)
             self.add_reply(reply.author.name, comment.author.name)
             self.parse_replies(reply)
 
@@ -68,15 +74,13 @@ class reddit_scraper:
             #Skip deleted comments
             if comment.author is None:
                 continue
-            if comment.author.name not in self.scraped_redditors:
-                self.add_scraped_redditor(comment.author)
+            self.add_scraped_redditor(comment.author)
             self.parse_replies(comment)
         self.scraped_submissions[submission.id]["parsed"] = True
 
     def parse_redditor(self, redditor):
         for comment in redditor.comments.new(limit=100):
-            if comment.submission.id not in self.scraped_submissions:
-                self.add_scraped_submission(comment.submission)
+            self.add_scraped_submission(comment.submission)
         self.scraped_redditors[redditor.name]["parsed"] = True
 
     def parse_scraped_submissions(self):
