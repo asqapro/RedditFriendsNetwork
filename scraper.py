@@ -2,8 +2,6 @@
 #Important:
 #
 # - Investigate whether checks for repeat submissions / redditors are robust. Need to design test for it
-# - Also investigate how deleted submissions coming from a redditor's profile are handled
-# - Possibly change way parsed submissions are tracked to show the difference between a parsed and deleted submission
 #
 # - Continue to investigate way to show network graph in meaningful way
 # - Continue to investigate efficient ways to store network graph to database / retrieve
@@ -14,6 +12,8 @@ import networkx as nx
 
 class reddit_scraper:
     def __init__(self):
+        self.reddit = praw.Reddit("FriendsNetwork")
+
         self.replies_graph = nx.MultiDiGraph()
         #Track submissions that have already been parsed to avoid wasting API requests
         self.scraped_submissions = {}
@@ -22,7 +22,7 @@ class reddit_scraper:
         self.scraped_redditors = {}
 
     def scrape_new_submissions(self, count):
-        for submission in reddit.subreddit("all").top("hour", limit=count):
+        for submission in self.reddit.subreddit("all").top("hour", limit=count):
             self.add_scraped_submission(submission)
 
     def add_scraped_submission(self, submission):
@@ -100,20 +100,8 @@ class reddit_scraper:
     def display_network(self):
         for u,v,w in self.replies_graph.edges(data=True):
             print(F"Parent author (P): {v}| Reply author (R): {u} | Weight (# of times R has replied to P overall): {w['weight']}")
-        
-
-def example_run():
-    reddit = praw.Reddit("FriendsNetwork")
-    scraper = reddit_scraper()
-
-    example_submission = reddit.submission("pzrr9w")
-    example_user = reddit.redditor('asqapro')
-
-    scraper.parse_submission(example_submission)
-    scraper.parse_redditor(example_user)
 
 if __name__ == '__main__':
-    reddit = praw.Reddit("FriendsNetwork")
     scraper = reddit_scraper()
     #Only grab new posts every 3600 seconds (1 hour)
     refresh_wait = 3600
