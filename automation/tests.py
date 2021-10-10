@@ -3,14 +3,17 @@ import praw
 class tester:
     def __init__(self):
         self.reddit = praw.Reddit("FriendsNetwork")
-        
+        self.single_user1_submission = self.reddit.submission("XXXXX")
+
     def test_parse_subreddit(self):
         pass
 
     def test_parse_submission(self):
+        example_submission = 
         pass
 
     def test_parse_user(self):
+        example_user = reddit.redditor('asqapro')
         pass
 
     def test_nodes(self):
