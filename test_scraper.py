@@ -14,23 +14,26 @@ def reddit_instance():
 def scraper_instance():
     return reddit_scraper()
 
-def test_parse_subreddit(self):
+def test_parse_subreddit():
     pass
 
 def test_parse_submission_no_replies(reddit_instance, scraper_instance):
     submission = reddit_instance.submission("q5jlig")
     scraper_instance.parse_submission(submission)
-    assert scraper_instance.scraped_submissions[submission.id]["parsed"]
+    assert submission.id in scraper_instance.scraped_submissions
+    assert scraper_instance.scraped_submissions[submission.id]["submission"] is submission
+    assert scraper_instance.scraped_submissions[submission.id]["parsed"] is True
+    assert scraper_instance.replies_graph.number_of_nodes() == 0
+    assert scraper_instance.replies_graph.number_of_edges() == 0
 
-def test_parse_user(self):
-    
+def test_parse_user():    
     pass
 
-def test_nodes(self):
+def test_nodes():
     pass
 
-def test_edges(self):
+def test_edges():
     pass
 
-def test_weights(self):
+def test_weights():
     pass
