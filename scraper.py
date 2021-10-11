@@ -73,6 +73,8 @@ class reddit_scraper:
             #Skip deleted comments
             if comment.author is None:
                 continue
+            if submission.author is not None:
+                self.add_reply(submission.author.name, comment.author.name)
             self.add_scraped_redditor(comment.author)
             self.parse_replies(comment)
 
@@ -115,5 +117,3 @@ if __name__ == '__main__':
         input("Pausing...")
         if refresh_duration < refresh_wait:
             sleep(refresh_wait - refresh_duration)
-
-    
