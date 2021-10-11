@@ -29,7 +29,7 @@ class reddit_scraper:
         #Skip deleted submissions
         if submission is None:
             return
-        #Skip parsed submissions
+        #Skip scraped submissions
         if submission.id in self.scraped_submissions:
             return
         self.scraped_submissions[submission.id] = {"submission": submission, "parsed": False}
@@ -61,42 +61,40 @@ class reddit_scraper:
             self.parse_replies(reply)
 
     def parse_submission(self, submission):
-        #Skip parsed submissions
-        if submission.id in self.scraped_submissions and self.scraped_submissions[submission.id]["parsed"]:
-            return
         #Grab all the comments in the thread
         while True:
             try:
                 submission.comments.replace_more()
                 break
-            except Exception as e:
-                print(e)
+            except:
                 print("Handling replace_more exception")
                 sleep(1)
-        
         for comment in submission.comments:
             #Skip deleted comments
             if comment.author is None:
                 continue
             self.add_scraped_redditor(comment.author)
             self.parse_replies(comment)
-        self.scraped_submissions[submission.id]["parsed"] = True
 
     def parse_redditor(self, redditor):
-        #Skip parsed redditors
-        if redditor.name in self.scraped_redditors and self.scraped_redditors[redditor.name]["parsed"]:
-            return
         for comment in redditor.comments.new(limit=100):
             self.add_scraped_submission(comment.submission)
-        self.scraped_redditors[redditor.name]["parsed"] = True
 
     def parse_scraped_submissions(self):
-        for submission in self.scraped_submissions.values():
-            self.parse_submission(submission["submission"])
+        for submission, metadata in self.scraped_submissions.items():
+            #Skip parsed submissions
+            if metadata["parsed"]:
+                continue
+            self.parse_submission(submission)
+            metadata["parsed"] = True
 
     def parse_scraped_redditors(self):
-        for redditor in self.scraped_redditors.values():
-            self.parse_redditor(redditor["redditor"])
+        for redditor, metadata in self.scraped_redditors.items():
+            #Skip parsed redditors
+            if metadata["parsed"]:
+                continue
+            self.parse_redditor(redditor)
+            metadata["parsed"] = True
 
     def display_network(self):
         for u,v,w in self.replies_graph.edges(data=True):
