@@ -85,7 +85,7 @@ class reddit_scraper:
             #Skip parsed submissions
             if metadata["parsed"]:
                 continue
-            self.parse_submission(submission)
+            self.parse_submission(metadata["submission"])
             metadata["parsed"] = True
 
     def parse_scraped_redditors(self):
@@ -93,7 +93,7 @@ class reddit_scraper:
             #Skip parsed redditors
             if metadata["parsed"]:
                 continue
-            self.parse_redditor(redditor)
+            self.parse_redditor(metadata["redditor"])
             metadata["parsed"] = True
 
     def display_network(self):
