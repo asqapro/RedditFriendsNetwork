@@ -102,11 +102,8 @@ class reddit_scraper:
 
 if __name__ == '__main__':
     scraper = reddit_scraper()
-    reddit_s = praw.Reddit("FriendsNetwork")
-    s = reddit_s.submission("q5jlig")
-    scraper.parse_submission(s)
     #Only grab new posts every 3600 seconds (1 hour)
-    '''refresh_wait = 3600
+    refresh_wait = 3600
     while True:
         refresh_timer_start = time()
         scraper.scrape_new_submissions(10)
@@ -117,6 +114,6 @@ if __name__ == '__main__':
         scraper.display_network()
         input("Pausing...")
         if refresh_duration < refresh_wait:
-            sleep(refresh_wait - refresh_duration)'''
+            sleep(refresh_wait - refresh_duration)
 
     

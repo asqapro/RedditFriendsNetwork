@@ -20,9 +20,6 @@ def test_parse_subreddit():
 def test_parse_submission_no_replies(reddit_instance, scraper_instance):
     submission = reddit_instance.submission("q5jlig")
     scraper_instance.parse_submission(submission)
-    assert submission.id in scraper_instance.scraped_submissions
-    assert scraper_instance.scraped_submissions[submission.id]["submission"] is submission
-    assert scraper_instance.scraped_submissions[submission.id]["parsed"] is True
     assert scraper_instance.replies_graph.number_of_nodes() == 0
     assert scraper_instance.replies_graph.number_of_edges() == 0
 
