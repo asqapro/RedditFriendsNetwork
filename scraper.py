@@ -61,6 +61,9 @@ class reddit_scraper:
             self.parse_replies(reply)
 
     def parse_submission(self, submission):
+        #Skip parsed submissions
+        if self.scraped_submissions[submission.id]["parsed"]:
+            return
         #Grab all the comments in the thread
         while True:
             try:
@@ -79,22 +82,19 @@ class reddit_scraper:
         self.scraped_submissions[submission.id]["parsed"] = True
 
     def parse_redditor(self, redditor):
+        #Skip parsed redditors
+        if self.scraped_redditors[redditor.name]["parsed"]:
+            return
         for comment in redditor.comments.new(limit=100):
             self.add_scraped_submission(comment.submission)
         self.scraped_redditors[redditor.name]["parsed"] = True
 
     def parse_scraped_submissions(self):
         for submission in self.scraped_submissions.values():
-            #Skip parsed submissions
-            if submission["parsed"]:
-                continue
             self.parse_submission(submission["submission"])
 
     def parse_scraped_redditors(self):
         for redditor in self.scraped_redditors.values():
-            #Skip parsed redditors
-            if redditor["parsed"]:
-                continue
             self.parse_redditor(redditor["redditor"])
 
     def display_network(self):
