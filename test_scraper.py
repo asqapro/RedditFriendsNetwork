@@ -17,7 +17,7 @@ def scraper_instance():
 def test_parse_subreddit(self):
     pass
 
-def parse_submission_no_replies(reddit_instance, scraper_instance):
+def test_parse_submission_no_replies(reddit_instance, scraper_instance):
     submission = reddit_instance.submission("q5jlig")
     scraper_instance.parse_submission(submission)
     assert scraper_instance.scraped_submissions[submission.id]["parsed"]

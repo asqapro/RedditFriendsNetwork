@@ -133,3 +133,4 @@ dmypy.json
 
 #PRAW configuration file
 praw.ini
+.vscode/settings.json
