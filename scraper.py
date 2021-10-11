@@ -9,6 +9,10 @@
 import praw
 from time import sleep, time
 import networkx as nx
+from bs4 import BeautifulSoup
+from collections import Counter
+from string import punctuation
+import re
 
 class reddit_scraper:
     def __init__(self):
@@ -20,6 +24,27 @@ class reddit_scraper:
         #Track users that have already been parsed to avoid wasting API requests
         #Maybe add a lockout timeout in the future since users are likely to post more comments eventually
         self.scraped_redditors = {}
+
+    def count_words(self, body_as_markdown):
+        #Strip reddit markdown links from comments
+        #Example: `[data][https://data.com]` becomes `data`
+        #Thanks to u/anon_smithsonian for the snippet (https://www.reddit.com/r/redditdev/comments/4s1z3r/check_for_a_link_within_squared_brackets/d56dtay/)
+        markdown_link_pattern = r'(\[)([^\]()#\n]+)\]\(([^\]()#\n]+)\)'
+        markdown_link_regex = re.compile(markdown_link_pattern, flags=re.IGNORECASE)
+        msg_links = markdown_link_regex.findall(body_as_markdown)
+        if msg_links:
+            body_as_markdown = markdown_link_regex.sub(r'\g<2>', body_as_markdown)
+
+        translationTable = str.maketrans("", "", punctuation)
+
+        body_soup = BeautifulSoup(body_as_markdown, features='html.parser')
+        body_text = body_soup.get_text()
+
+        body_text = body_text.translate(translationTable).lower()
+        split_body = re.split(' *\n+ *|\s+',body_text)
+        count_of_words = Counter(split_body)
+        print(count_of_words)
+        input("Pausing...")
 
     def scrape_new_submissions(self, count):
         for submission in self.reddit.subreddit("all").top("hour", limit=count):
@@ -81,6 +106,7 @@ class reddit_scraper:
     def parse_redditor(self, redditor):
         for comment in redditor.comments.new(limit=100):
             self.add_scraped_submission(comment.submission)
+            self.count_words(comment.body)
 
     def parse_scraped_submissions(self):
         for submission, metadata in self.scraped_submissions.items():

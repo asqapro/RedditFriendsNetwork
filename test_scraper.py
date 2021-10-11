@@ -129,3 +129,56 @@ def test_avoid_reparse_redditor(scraper, redditor_user1, submission_user1_replie
     assert scraper.scraped_submissions[submission_user1_replies.id]["parsed"] is True
     scraper.parse_scraped_redditors()
     assert scraper.scraped_submissions[submission_user1_replies.id]["parsed"] is True
+
+def test_tracking_redditor_words():
+    #Scrape redditor profile
+    #Assert that the top 3 keywords being tracked match the top 3 expected keywords (will need to calculate them manually)
+    pass
+
+def test_tracking_redditor_words_markdown_italic():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_bold():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_bold_italic():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_strikethrough():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_spoiler():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_superscript():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_code():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_heading():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_link():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_list():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_quote():
+    #Markdown may cause issues with counting words
+    pass
+
+def test_tracking_redditor_words_markdown_table():
+    #Markdown may cause issues with counting words
+    pass
