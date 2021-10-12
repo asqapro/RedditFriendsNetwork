@@ -1,6 +1,8 @@
+from typing import Collection
 import pytest
 import praw
 from scraper import reddit_scraper
+from collections import Counter
 
 #Current dataset:
 # 4 submissions (and 1 deleted)
@@ -130,55 +132,10 @@ def test_avoid_reparse_redditor(scraper, redditor_user1, submission_user1_replie
     scraper.parse_scraped_redditors()
     assert scraper.scraped_submissions[submission_user1_replies.id]["parsed"] is True
 
-def test_tracking_redditor_words():
-    #Scrape redditor profile
-    #Assert that the top 3 keywords being tracked match the top 3 expected keywords (will need to calculate them manually)
-    pass
-
-def test_tracking_redditor_words_markdown_italic():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_bold():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_bold_italic():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_strikethrough():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_spoiler():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_superscript():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_code():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_heading():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_link():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_list():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_quote():
-    #Markdown may cause issues with counting words
-    pass
-
-def test_tracking_redditor_words_markdown_table():
-    #Markdown may cause issues with counting words
-    pass
+def test_tracking_redditor_words_with_markdown(scraper, redditor_user1):
+    word_counts = Counter({"reply": 13, "by": 13, "user1": 13, "nested": 3,
+        "italic": 2, "bold": 2, "strikethrough": 1, "spoiler": 1, "superscript": 1,
+        "code": 1, "heading": 1, "link": 1, "list": 2, "quote": 1})
+    scraper.add_scraped_redditor(redditor_user1)
+    scraper.parse_scraped_redditors()
+    assert scraper.scraped_redditors[redditor_user1.name]["word_count"] == word_counts

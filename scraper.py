@@ -43,8 +43,7 @@ class reddit_scraper:
         body_text = body_text.translate(translationTable).lower()
         split_body = re.split(' *\n+ *|\s+',body_text)
         count_of_words = Counter(split_body)
-        print(count_of_words)
-        input("Pausing...")
+        return count_of_words
 
     def scrape_new_submissions(self, count):
         for submission in self.reddit.subreddit("all").top("hour", limit=count):
@@ -66,7 +65,7 @@ class reddit_scraper:
         #Skip parsed redditors  
         if redditor.name in self.scraped_redditors:
             return
-        self.scraped_redditors[redditor.name] = {"redditor": redditor, "parsed": False}
+        self.scraped_redditors[redditor.name] = {"redditor": redditor, "parsed": False, "word_count": Counter()}
 
     def add_reply(self, reply_author, parent_author):
         #Track how many times each user responds to the same user
@@ -104,12 +103,14 @@ class reddit_scraper:
             self.parse_replies(comment)
 
     def parse_redditor(self, redditor):
+        word_count = Counter()
         for comment in redditor.comments.new(limit=100):
             self.add_scraped_submission(comment.submission)
-            self.count_words(comment.body)
+            word_count += self.count_words(comment.body)
+        return word_count
 
     def parse_scraped_submissions(self):
-        for submission, metadata in self.scraped_submissions.items():
+        for metadata in self.scraped_submissions.values():
             #Skip parsed submissions
             if metadata["parsed"]:
                 continue
@@ -117,11 +118,11 @@ class reddit_scraper:
             metadata["parsed"] = True
 
     def parse_scraped_redditors(self):
-        for redditor, metadata in self.scraped_redditors.items():
+        for metadata in self.scraped_redditors.values():
             #Skip parsed redditors
             if metadata["parsed"]:
                 continue
-            self.parse_redditor(metadata["redditor"])
+            metadata["word_count"] += self.parse_redditor(metadata["redditor"])
             metadata["parsed"] = True
 
     def display_network(self):
